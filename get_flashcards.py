@@ -6,6 +6,7 @@ from flask import Flask
 from flask.ext.cors import CORS
 #pip install -U flask-cors
 import subprocess
+from nltk.stem.porter import PorterStemmer
 
 app = Flask(__name__)
 
@@ -103,23 +104,28 @@ def get_flashcards(category):
     #Comment this to make it look into data folder
     path_to_json = 'data/'
     
-    category = category.split('=')[1]
-    print category
+    category = category.split('=')[1].replace('\n',' ')
     
     if len(category.split(' ')) > 1:
         concepts = extract_concepts(category)
     else:
         concepts = [category]
     
+    porter_stemmer = PorterStemmer()
+    stemmed_concepts = [porter_stemmer.stem(concept) for concept in concepts]
+
+    print 'STEMMED CONCEPTS: ',stemmed_concepts
+    print 'CONCEPTS: ',concepts
+    
     json_files = []
     concepts_to_mine = []
     # First, look to see if we've already mined these concepts
-    for concept in concepts:
+    for i,concept in enumerate(stemmed_concepts):
         for fname in os.listdir(path_to_json):
             if fname.endswith('.json') and concept in fname:
                 json_files.append(fname)
         if len(json_files) < 1:
-            concepts_to_mine.append(concept)
+            concepts_to_mine.append(concepts[i])
     
     print concepts_to_mine
     # If we haven't already mined concept do it now
@@ -127,7 +133,7 @@ def get_flashcards(category):
         p = subprocess.Popen("python mine_wordnet.py " + "'" + concept + "'", stdout=subprocess.PIPE, shell=True)
         (output, err) = p.communicate()
     
-    return scan_data_and_return_json(concepts)
+    return scan_data_and_return_json(stemmed_concepts)
  
 if __name__ == '__main__':
     app.run()
