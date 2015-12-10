@@ -91,7 +91,7 @@ def create_flashcard(i,card_front,card_back):
     with open(file_endpoint, "w") as data_out:
         json.dump(flashcard, data_out)
 
-def main(argv):
+def main(concept):
     
     # Global
     DEBUG = False
@@ -99,33 +99,32 @@ def main(argv):
     # Start by providing seed word to filter out unrelated topics/words
     SEED = 'math'
     seed_syn = get_definitions(SEED).keys()[0]
-    
+
     if DEBUG:
         print 'SEED: ',SEED
         print seed_syn
 
-    topic = argv
-    topic_syns = get_definitions(topic)
-    print 'TOPIC: ',topic
+    concept_syns = get_definitions(concept)
+    print 'TOPIC: ',concept
     if DEBUG:
-        print 'SYNSETS: ',topic_syns
+        print 'SYNSETS: ',concept_syns
 
-    relevant_synsets = calc_seed_similarity(seed_syn,topic_syns.keys())
+    relevant_synsets = calc_seed_similarity(seed_syn,concept_syns.keys())
     if DEBUG:
         print 'REL SYNSETS: ',relevant_synsets
-        
+
     # Create definition flashcards for relevant semantic matches
     for i in range(len(relevant_synsets)):
-        create_flashcard(i,topic,topic_syns[relevant_synsets[i][0]])
+        create_flashcard(i,concept,concept_syns[relevant_synsets[i][0]])
 
     # We only want to get the ontology if we have a valid synset for our SEED
     if relevant_synsets:
-        _,_ = get_ontology(seed_syn,topic,write_file=True) # hypernyms, hyponyms
+        _,_ = get_ontology(seed_syn,concept,write_file=True) # hypernyms, hyponyms
 
 if __name__ == "__main__":
     # Retrive relevant semantic meanings from the topic entered by user
-    _,topic = sys.argv
-    main(topic)
+    _,concept = sys.argv
+    main(concept)
     
     # Now that we've retrieved relevant semantic meanings, run the wolfram api script
-    call_wolfram_api(topic)
+    call_wolfram_api(concept)
