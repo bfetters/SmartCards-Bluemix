@@ -75,12 +75,39 @@ def extract_concepts(user_text):
     bigram_keywords = [word for word in bigrams if word in cal or word in alg or word in trig or word in geo]
     unigram_keywords = [word for word in unigrams if word in cal or word in alg or word in trig or word in geo]
     
-    # return a singl list of keywords
-    return np.unique(unigram_keywords + bigram_keywords).tolist()
+    # return a single list of keywords
+    # return np.unique(unigram_keywords + bigram_keywords).tolist()
+
+    concepts = np.unique(unigram_keywords + bigram_keywords).tolist()
+
+    import requests
+    import ast
+
+    auth=('82a698f0-8d8c-42f9-9c7d-1e4b97eebd52','50KJG6jdgZ6h')
+
+    all_concepts = []
+    for c in concepts:
+        c = c.capitalize()
+        url = 'https://gateway.watsonplatform.net/concept-insights/api/v2/graphs/wikipedia/en-20120601/concepts/'\
+             + c +'/related_concepts'
+        r = requests.get(url, auth=auth)
+        if r.status_code == 200:
+            all_concepts.append(ast.literal_eval(r.content))
+
+    results = []
+    threshold = 0.977
+    for c in all_concepts:
+        li_temp = c['concepts']
+        for d in li_temp:
+            if d['score'] > threshold:
+    #             print (d['concept']['label'], d['score'])
+                results.append(d['concept']['label'])
+
+
+    print "RESULTS: ",results
+    return results
 
 def scan_data_and_return_json(concepts):
-    
-    print 'scan_data_and_return_json'
     
     response = []
     path_to_json = 'data/'
@@ -110,11 +137,14 @@ def get_flashcards(category):
     path_to_json = 'data/'
     
     category = category.split('=')[1].replace('\n',' ')
-    
-    if len(category.split(' ')) > 1:
-        concepts = extract_concepts(category)
-    else:
-        concepts = [category]
+
+    # if len(category.split(' ')) > 1:
+    #     concepts = extract_concepts(category)
+    # else:
+    #     concepts = [category]
+
+    print 'CATEGORY: ',category
+    concepts = extract_concepts(category)
     
     porter_stemmer = PorterStemmer()
     stemmed_concepts = [porter_stemmer.stem(concept) for concept in concepts]
