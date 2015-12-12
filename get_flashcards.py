@@ -4,9 +4,9 @@ import os, json
 import pandas as pd
 from flask import Flask
 from flask.ext.cors import CORS
-#pip install -U flask-cors
 import subprocess
 from nltk.stem.porter import PorterStemmer
+#pip install -U flask-cors
 
 app = Flask(__name__)
 
@@ -101,6 +101,11 @@ def scan_data_and_return_json(concepts):
 
 @app.route("/<category>")
 def get_flashcards(category):
+
+    def gen_concepts_to_mine(L):
+        start, end = L[0], L[-1]
+        return sorted(set(range(start, end + 1)).difference(L))
+
     #Comment this to make it look into data folder
     path_to_json = 'data/'
     
@@ -116,18 +121,19 @@ def get_flashcards(category):
 
     print 'STEMMED CONCEPTS: ',stemmed_concepts
     print 'CONCEPTS: ',concepts
-    
-    json_files = []
-    concepts_to_mine = []
+
     # First, look to see if we've already mined these concepts
+    concepts_to_mine = []
     for i,concept in enumerate(stemmed_concepts):
+        existing_file = False
         for fname in os.listdir(path_to_json):
             if fname.endswith('.json') and concept in fname:
-                json_files.append(fname)
-        if len(json_files) < 1:
+                existing_file = True
+                break
+        if not existing_file:
             concepts_to_mine.append(concepts[i])
     
-    print concepts_to_mine
+    print 'CONCEPTS TO MINE: ',concepts_to_mine
     # If we haven't already mined concept do it now
     for concept in concepts_to_mine:
         p = subprocess.Popen("python mine_wordnet.py " + "'" + concept + "'", stdout=subprocess.PIPE, shell=True)

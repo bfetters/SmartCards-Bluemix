@@ -8,33 +8,7 @@
 
 <body layout="row" ng-controller="AppCtrl" ng-cloak>
   <md-sidenav layout="column" class="md-sidenav-left md-whiteframe-z2" md-component-id="left" md-is-locked-open="$mdMedia('gt-md')">
-    <md-toolbar class="md-hue-2">
-      <span flex></span>
-      <div layout="row" layout-align="start center" id="userProfile">
-        <md-icon class="md-avatar" md-svg-icon="avatars:svg-1"></md-icon>
-        <span flex></span>
-      </div>
-      <span flex></span>
-      <div class="md-body-2 text-center">Joe Manley</div>
-    </md-toolbar>
-    <md-list>
-      <md-list-item class="md-2-line" ng-repeat="item in menu" role="link" md-ink-ripple>
-        <md-icon md-svg-icon="{{item.icon}}" aria-label="{{item.title}}"></md-icon>
-        <div class="md-list-item-text">
-          <span class="md-body-2">{{item.title}}</span>
-        </div>
-      </md-list-item>
-      <md-divider></md-divider>
-      <md-subheader class="md-no-sticky">Management</md-subheader>
-      <md-list-item class="md-2-line" ng-repeat="item in admin" role="link" md-ink-ripple>
-        <md-icon md-svg-icon="{{item.icon}}" aria-label="{{item.title}}"></md-icon>
-        <div class="md-list-item-text">
-          <span class="md-body-2">{{item.title}}</span>
-        </div>
-      </md-list-item>
-    </md-list>
-    <div class="logo">
-    </div>
+    <div class="logo"></div>
   </md-sidenav>
   <div layout="column" class="relative" layout-fill role="main">
     <md-button class="md-fab md-fab-bottom-right" aria-label="Search" ng-click="startSearch($event, $http)">
@@ -45,9 +19,6 @@
         <md-button class="md-icon-button" ng-click="toggleSidenav('left')" hide-gt-md aria-label="Menu">
           <md-icon md-svg-icon="navigation:ic_menu_24px" aria-label="Menu"></md-icon>
         </md-button>
-        <h3>
-          Cardboard
-        </h3>
         <span flex></span>
         <md-button class="md-icon-button" aria-label="Search" ng-click="toggleSearch()">
           <md-icon md-svg-icon="action:ic_search_24px" aria-label="Search"></md-icon>
