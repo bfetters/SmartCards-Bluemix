@@ -169,9 +169,9 @@ md-list-item.md-3-line md-divider[md-inset] {
 }
 .logo {
   background: url('../smartcards.png') no-repeat center;
-  width: 303px;
-  height: 400px;
-  background-size: 340px 240px;
+  width: 203px;
+  height: 300px;
+  background-size: 200px 90px;
   top: auto;
-  bottom: 10px;
+  bottom: auto;
 }
