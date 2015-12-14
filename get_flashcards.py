@@ -14,76 +14,106 @@ CORS(app)
 
 def extract_concepts(user_text):
     '''extract concepts from user input '''
-    import nltk
-    from nltk.corpus import stopwords
-    import pandas as pd
-    import numpy as np
+#     import nltk
+#     from nltk.corpus import stopwords
+#     import pandas as pd
+#     import numpy as np
     
-    def split_lexicon_keywords(lexicon):
-        lst = []
-        for keyword in lexicon:
-            try:
-                for token in keyword.split(" "):
-                    if unicode(token) not in stopwords.words():
-                        lst.append(token)
-            except: AttributeError
-        return lst
+#     def split_lexicon_keywords(lexicon):
+#         lst = []
+#         for keyword in lexicon:
+#             try:
+#                 for token in keyword.split(" "):
+#                     if unicode(token) not in stopwords.words():
+#                         lst.append(token)
+#             except: AttributeError
+#         return lst
 
-    def to_lowercase(math_list):
-        # lower case all math words 
-        word_list = []
-        for word in math_list:
-            try:
-                word_list.append(word.lower())
-            except: AttributeError
-        return word_list
+#     def to_lowercase(math_list):
+#         # lower case all math words 
+#         word_list = []
+#         for word in math_list:
+#             try:
+#                 word_list.append(word.lower())
+#             except: AttributeError
+#         return word_list
     
     
-    # get math lexicons
-    df_cal = pd.read_csv("data/calculus_lexicon.csv", header=None)
-    df_alg = pd.read_csv("data/algebra_lexicon.csv", header=None)
-    df_trig = pd.read_csv("data/trigonometry_lexicon.csv", header=None)
-    df_geo = pd.read_csv("data/geometry_lexicon.csv", header=None)
+#     # get math lexicons
+#     df_cal = pd.read_csv("data/calculus_lexicon.csv", header=None)
+#     df_alg = pd.read_csv("data/algebra_lexicon.csv", header=None)
+#     df_trig = pd.read_csv("data/trigonometry_lexicon.csv", header=None)
+#     df_geo = pd.read_csv("data/geometry_lexicon.csv", header=None)
     
-    cal = df_cal[df_cal.columns].values[0]
-    alg = df_alg[df_alg.columns].values[0]
-    trig = df_trig[df_trig.columns].values[0]
-    geo = df_geo[df_geo.columns].values[0]
+#     cal = df_cal[df_cal.columns].values[0]
+#     alg = df_alg[df_alg.columns].values[0]
+#     trig = df_trig[df_trig.columns].values[0]
+#     geo = df_geo[df_geo.columns].values[0]
     
-    # split lexicon terms to increase diversity of math terms
-    cal  = split_lexicon_keywords(cal)
-    alg  = split_lexicon_keywords(alg)
-    trig = split_lexicon_keywords(trig)
-    geo  = split_lexicon_keywords(geo)
+#     # split lexicon terms to increase diversity of math terms
+#     cal  = split_lexicon_keywords(cal)
+#     alg  = split_lexicon_keywords(alg)
+#     trig = split_lexicon_keywords(trig)
+#     geo  = split_lexicon_keywords(geo)
     
-    cal  = to_lowercase(cal)
-    alg  = to_lowercase(alg)
-    trig = to_lowercase(trig)
-    geo  = to_lowercase(geo)
+#     cal  = to_lowercase(cal)
+#     alg  = to_lowercase(alg)
+#     trig = to_lowercase(trig)
+#     geo  = to_lowercase(geo)
     
-    # tokenize syllabus 
-    tokens = nltk.tokenize.regexp_tokenize(user_text, r'[\w+]+')
+#     # tokenize syllabus 
+#     tokens = nltk.tokenize.regexp_tokenize(user_text, r'[\w+]+')
 
-    # filter out stop words for user_text, create unigrams and bigrams
-    unigrams = [word for word in tokens if word.lower() not in stopwords.words()]
-    bigrams_tuples = [bigram for bigram in nltk.bigrams(unigrams)]
+#     # filter out stop words for user_text, create unigrams and bigrams
+#     unigrams = [word for word in tokens if word.lower() not in stopwords.words()]
+#     bigrams_tuples = [bigram for bigram in nltk.bigrams(unigrams)]
     
-    # join bigrams tuples into bigram terms
-    bigrams = [ " ".join(bigram)  for bigram in bigrams_tuples ]
+#     # join bigrams tuples into bigram terms
+#     bigrams = [ " ".join(bigram)  for bigram in bigrams_tuples ]
     
-    # extract keyowrds from syllabus
-    bigram_keywords = [word for word in bigrams if word in cal or word in alg or word in trig or word in geo]
-    unigram_keywords = [word for word in unigrams if word in cal or word in alg or word in trig or word in geo]
+#     # extract keyowrds from syllabus
+#     bigram_keywords = [word for word in bigrams if word in cal or word in alg or word in trig or word in geo]
+#     unigram_keywords = [word for word in unigrams if word in cal or word in alg or word in trig or word in geo]
     
-    # return a single list of keywords
-    # return np.unique(unigram_keywords + bigram_keywords).tolist()
+#     # return a single list of keywords
+#     # return np.unique(unigram_keywords + bigram_keywords).tolist()
 
-    concepts = np.unique(unigram_keywords + bigram_keywords).tolist()
+#     concepts = np.unique(unigram_keywords + bigram_keywords).tolist()
 
     import requests
     import ast
+    
+    f = open("./bluemix_authentication.config", "r")
+    auth = ast.literal_eval(f.read())
+    
+    url='https://gateway.watsonplatform.net/concept-insights/api/v2/graphs/wikipedia/en-20120601/annotate_text'
+    headers = { 'Content-Type': 'text/plain'}
+    r = requests.post(url, 
+                      headers=headers, 
+                      data={'body': text},
+                      auth=auth)
 
-    auth=('82a698f0-8d8c-42f9-9c7d-1e4b97eebd52','50KJG6jdgZ6h')
+    print ("status code annotate_text ", r.status_code)
+    concepts = set(label['concept']['label']for label in ast.literal_eval(r.content).values()[0])
+
+    copy = concepts.copy()
+    pattern1 = '[0-9]'
+    pattern2 = '\(\w+\)'
+
+    for concept in concepts:
+        # drop concepts with numerics
+        r = re.search(pattern1,concept)
+        if r:
+            copy.discard(concept)
+            continue
+
+        r = re.search(pattern2,concept)
+        if r:
+            copy.discard(concept)
+
+    results = list(copy)
+
+   
 
     all_concepts = []
     for c in concepts:
