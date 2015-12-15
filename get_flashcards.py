@@ -28,11 +28,12 @@ def extract_concepts(user_text):
                       data={'body': user_text},
                       auth=auth)
 
-    concepts = set(label['concept']['label']for label in ast.literal_eval(r.content).values()[0])
+    concepts = set(label['concept']['label'].lower() for label in ast.literal_eval(r.content).values()[0])
 
     copy = concepts.copy()
     pattern1 = '[0-9]'
     pattern2 = '\(\w+\)'
+    pattern3 = '^List'
 
     for concept in concepts:
         # drop concepts with numerics
@@ -42,6 +43,10 @@ def extract_concepts(user_text):
             continue
 
         r = re.search(pattern2,concept)
+        if r:
+            copy.discard(concept)
+
+        r = re.search(pattern3,concept)
         if r:
             copy.discard(concept)
 
@@ -65,11 +70,33 @@ def extract_concepts(user_text):
         li_temp = c['concepts']
         for d in li_temp:
             if d['score'] > threshold:
-                results.append(d['concept']['label'])
+                results.append(d['concept']['label'].lower())
 
 
-    print "RESULTS: ",results
-    return results
+    copy = set(results).copy()
+    pattern1 = '[0-9]'
+    pattern2 = '\(\w+\)'
+    pattern3 = '^List'
+
+    for concept in results:
+        # drop concepts with numerics
+        r = re.search(pattern1,concept)
+        if r:
+            copy.discard(concept)
+            continue
+
+        r = re.search(pattern2,concept)
+        if r:
+            copy.discard(concept)
+
+        r = re.search(pattern3,concept)
+        if r:
+            copy.discard(concept)
+
+    concepts = list(copy)
+
+    print "RESULTS: ",concepts
+    return concepts
 
 def scan_data_and_return_json(concepts):
     
@@ -130,6 +157,7 @@ def get_flashcards(category):
     print 'CONCEPTS TO MINE: ',concepts_to_mine
     # If we haven't already mined concept do it now
     for concept in concepts_to_mine:
+        print 'before mine_wordnet: ',concept
         p = subprocess.Popen("python mine_wordnet.py " + "'" + concept + "'", stdout=subprocess.PIPE, shell=True)
         (output, err) = p.communicate()
     
